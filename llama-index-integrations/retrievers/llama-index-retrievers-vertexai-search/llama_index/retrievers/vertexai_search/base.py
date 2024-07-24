@@ -56,6 +56,9 @@ class VertexAISearchRetriever(BaseRetriever):
         1 - Structured data
         2 - Website data
 
+        max_documents: int = 5
+        The maximum number of documents to return
+
     Example:
         retriever = VertexAISearchRetriever(
             project_id=PROJECT_ID,
@@ -73,8 +76,6 @@ class VertexAISearchRetriever(BaseRetriever):
     """Filter expression."""
     get_extractive_answers: bool = False
     """If True return Extractive Answers, otherwise return Extractive Segments or Snippets."""
-    max_documents: int = 5
-    """The maximum number of documents to return."""
     max_extractive_answer_count: int = 1
     """The maximum number of extractive answers returned in each search result.
     At most 5 answers will be returned for each SearchResult.
@@ -179,7 +180,7 @@ class VertexAISearchRetriever(BaseRetriever):
         """Prepares a ContentSpec object."""
         from google.cloud.discoveryengine_v1beta import SearchRequest
 
-        if self.engine_data_type == 0:
+        if self.engine_data_type in [0, 1]:
             if self.get_extractive_answers:
                 extractive_content_spec = SearchRequest.ContentSearchSpec.ExtractiveContentSpec(
                     max_extractive_answer_count=self.max_extractive_answer_count,
@@ -190,20 +191,14 @@ class VertexAISearchRetriever(BaseRetriever):
                     max_extractive_segment_count=self.max_extractive_segment_count,
                     return_extractive_segment_score=self.return_extractive_segment_score,
                 )
-            content_search_spec = {"extractive_content_spec": extractive_content_spec}
-        elif self.engine_data_type == 1:
-            content_search_spec = None
-        elif self.engine_data_type == 2:
             content_search_spec = {
-                "extractive_content_spec": SearchRequest.ContentSearchSpec.ExtractiveContentSpec(
-                    max_extractive_segment_count=self.max_extractive_segment_count,
-                    max_extractive_answer_count=self.max_extractive_answer_count,
-                    return_extractive_segment_score=self.return_extractive_segment_score,
-                ),
+                "extractive_content_spec": extractive_content_spec,
                 "snippet_spec": SearchRequest.ContentSearchSpec.SnippetSpec(
                     return_snippet=True
                 ),
             }
+        elif self.engine_data_type == 1:
+            content_search_spec = None
         else:
             raise NotImplementedError(
                 "Only data store type 0 (Unstructured), 1 (Structured),"
