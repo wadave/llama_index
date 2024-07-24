@@ -180,7 +180,7 @@ class VertexAISearchRetriever(BaseRetriever):
         """Prepares a ContentSpec object."""
         from google.cloud.discoveryengine_v1beta import SearchRequest
 
-        if self.engine_data_type in [0, 1]:
+        if self.engine_data_type in [0, 2]:
             if self.get_extractive_answers:
                 extractive_content_spec = SearchRequest.ContentSearchSpec.ExtractiveContentSpec(
                     max_extractive_answer_count=self.max_extractive_answer_count,
